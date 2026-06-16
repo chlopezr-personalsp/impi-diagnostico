@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autodiagnóstico IMPI — Madurez de su Portafolio de Infraestructura</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#1F3864; --blue:#2E75B6; --lblue:#D6E4F0; --grey:#F2F2F2;
+    --green:#2E7D32; --amber:#E08600; --red:#C0392B; --text:#222; --muted:#666;
+  }
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;color:var(--text);margin:0;background:#fafbfc;line-height:1.5}
+  .wrap{max-width:880px;margin:0 auto;padding:24px}
+  header.top{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:34px 24px;border-radius:0 0 14px 14px}
+  header.top h1{margin:0 0 6px;font-size:26px}
+  header.top p{margin:0;opacity:.92;font-size:15px}
+  .card{background:#fff;border:1px solid #e2e6ea;border-radius:12px;padding:22px 24px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  h2{color:var(--navy);font-size:20px;margin:4px 0 14px;border-bottom:2px solid var(--lblue);padding-bottom:8px}
+  h3{color:var(--blue);font-size:16px;margin:18px 0 6px}
+  label.fld{display:block;font-weight:bold;font-size:14px;margin:12px 0 4px;color:#333}
+  input[type=text],input[type=email],input[type=number],select{
+    width:100%;padding:10px;border:1px solid #c8ccd0;border-radius:7px;font-size:14px;font-family:inherit}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .q{margin:14px 0;padding:14px 16px;background:var(--grey);border-radius:9px;border-left:4px solid var(--blue)}
+  .q .qt{font-weight:bold;font-size:14px;margin-bottom:9px}
+  .opt{display:flex;align-items:flex-start;gap:9px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:14px}
+  .opt:hover{background:#e9eef4}
+  .opt input{margin-top:3px}
+  .dim-tag{display:inline-block;background:var(--navy);color:#fff;font-size:11px;font-weight:bold;
+    padding:2px 9px;border-radius:10px;margin-bottom:6px;letter-spacing:.3px}
+  .btn{display:inline-block;background:var(--blue);color:#fff;border:none;padding:14px 30px;
+    font-size:16px;font-weight:bold;border-radius:9px;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--navy)}
+  .btn:disabled{background:#9bb4cf;cursor:not-allowed}
+  .btn-ghost{background:#fff;color:var(--blue);border:2px solid var(--blue)}
+  .center{text-align:center}
+  .muted{color:var(--muted);font-size:13px}
+  .hidden{display:none}
+  /* resultados */
+  .score-hero{text-align:center;padding:14px}
+  .score-num{font-size:64px;font-weight:bold;line-height:1}
+  .level-badge{display:inline-block;color:#fff;font-weight:bold;padding:7px 20px;border-radius:20px;font-size:18px;margin:10px 0}
+  .bar-row{display:flex;align-items:center;gap:12px;margin:9px 0}
+  .bar-label{flex:0 0 230px;font-size:13px;font-weight:bold}
+  .bar-track{flex:1;background:#e6e9ec;border-radius:8px;height:22px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;
+    color:#fff;font-size:12px;font-weight:bold;padding-right:8px;min-width:34px}
+  .reco{background:var(--lblue);border-left:5px solid var(--blue);padding:12px 16px;border-radius:0 8px 8px 0;margin:8px 0;font-size:14px}
+  .cta{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:22px;border-radius:11px;margin-top:14px}
+  .cta h3{color:#fff;margin-top:0}
+  .err{color:var(--red);font-size:13px;font-weight:bold;margin-top:8px}
+  footer{ text-align:center;color:#94a0ad;font-size:12px;padding:26px 12px}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}.bar-label{flex-basis:130px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap" style="padding-top:0;padding-bottom:0">
+    <h1>Autodiagnóstico IMPI</h1>
+    <p>Índice de Madurez del Portafolio de Infraestructura · Un primer acercamiento al estado de su portafolio</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- INTRO -->
+  <div class="card" id="introCard">
+    <h2>¿Qué es esto?</h2>
+    <p>Si usted administra <strong>varios equipamientos a la vez</strong> (sedes, edificios, instalaciones), este
+    autodiagnóstico le da en <strong>10 minutos</strong> una primera lectura de qué tan maduro es el manejo de su
+    portafolio, en una escala de <strong>Reactivo</strong> a <strong>Estratégico</strong>.</p>
+    <p class="muted">Son 12 preguntas en 6 dimensiones. Al terminar recibe un <strong>informe PDF</strong> con su nivel,
+    el detalle por dimensión y sus prioridades inmediatas. Basado en la metodología <strong>MeDIPI — Infraestructura como Portafolio</strong>.</p>
+    <div class="center" style="margin-top:18px"><button class="btn" onclick="start()">Comenzar el autodiagnóstico →</button></div>
+  </div>
+
+  <!-- FORMULARIO -->
+  <form id="form" class="hidden" onsubmit="return false">
+    <div class="card">
+      <h2>Sus datos</h2>
+      <div class="grid">
+        <div><label class="fld">Nombre de la entidad / organización *</label><input type="text" id="entidad" required></div>
+        <div><label class="fld">Su nombre y cargo *</label><input type="text" id="responsable" required></div>
+        <div><label class="fld">Correo electrónico *</label><input type="email" id="email" required></div>
+        <div><label class="fld">País</label><input type="text" id="pais" value="Colombia"></div>
+        <div><label class="fld">N.º aproximado de activos / sedes</label><input type="number" id="nsedes" min="1" placeholder="ej. 50"></div>
+        <div><label class="fld">Tipo de infraestructura</label>
+          <select id="tipo">
+            <option>Educativa</option><option>Salud</option><option>Deportiva / recreativa</option>
+            <option>Administrativa / oficinas</option><option>Cultural</option><option>Otra</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Las 12 preguntas</h2>
+      <p class="muted">Elija la opción que mejor describe su situación <em>real</em> hoy (no la ideal).</p>
+      <div id="questions"></div>
+      <div class="center" style="margin-top:20px">
+        <button class="btn" type="button" onclick="submitForm()">Generar mi informe →</button>
+        <div id="formErr" class="err"></div>
+      </div>
+    </div>
+  </form>
+
+  <!-- RESULTADOS -->
+  <div id="results" class="hidden"></div>
+
+</div>
+
+<footer>
+  Metodología MeDIPI — Infraestructura como Portafolio · Este autodiagnóstico es una herramienta de aproximación macro y no
+  reemplaza un diagnóstico técnico de campo.
+</footer>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN — edite estos valores antes de publicar
+   ============================================================ */
+const CONTACTO = {
+  nombre: "Carlos López",
+  email: "dominahoyweb@gmail.com",    // <-- su correo de contacto comercial
+  mensaje: "Solicito información sobre el Diagnóstico Integral de mi portafolio (MeDIPI)."
+};
+// Para CAPTURAR PROSPECTOS automáticamente, cree un endpoint gratis en https://formspree.io
+// y pegue aquí su URL (queda como "https://formspree.io/f/xxxxxxx"). Si lo deja vacío, la
+// herramienta funciona igual pero no envía el lead a ningún lado (solo genera el PDF).
+const LEAD_ENDPOINT = "https://formspree.io/f/xzdqwqbq";
+
+/* ============================================================
+   MODELO IMPI — 6 dimensiones ponderadas, 2 preguntas c/u
+   Cada opción vale nivel 1..4  ->  25/50/75/100 puntos
+   ============================================================ */
+const DIMENSIONS = [
+  { id:"D1", nombre:"Conocimiento del portafolio", peso:0.20,
+    rec:"Construya un inventario único y centralizado de sus activos con datos básicos (año, área, capacidad, georreferencia). Sin este cimiento, ninguna decisión de inversión es defendible.",
+    qs:[
+      {t:"¿Cuenta con un inventario centralizado y actualizado de todos sus activos de infraestructura?",
+       o:["No existe / la información está dispersa","Inventario parcial o desactualizado","Inventario completo pero estático (hoja de cálculo)","Inventario centralizado, actualizado y georreferenciado"]},
+      {t:"¿Conoce los datos básicos de cada activo (año de construcción, área, capacidad)?",
+       o:["No, o de muy pocos","Solo de algunos activos","De la mayoría","De todos, con respaldo documental"]},
+    ]},
+  { id:"D2", nombre:"Estado físico / condición", peso:0.15,
+    rec:"Implemente una evaluación estandarizada de la condición física por componente. Pase de reaccionar ante fallas a conocer el estado real de cada activo.",
+    qs:[
+      {t:"¿Sabe en qué condición física se encuentra cada uno de sus activos?",
+       o:["No lo sabemos","Solo nos enteramos cuando hay una falla","Tenemos una valoración general","Evaluación técnica documentada por componente"]},
+      {t:"¿Con qué frecuencia evalúa la condición de su infraestructura?",
+       o:["Nunca / solo ante emergencias","Esporádicamente","Periódicamente, sin método estándar","Periódicamente, con un instrumento estandarizado"]},
+    ]},
+  { id:"D3", nombre:"Cumplimiento normativo", peso:0.20,
+    rec:"Mida el cumplimiento de sus activos frente a las normas aplicables (sismo-resistencia, accesibilidad, normas técnicas del sector) y conviértalo en criterio de priorización.",
+    qs:[
+      {t:"¿Conoce el nivel de cumplimiento de sus activos frente a las normas aplicables?",
+       o:["No","Sospechamos incumplimientos, pero sin medirlos","Evaluado parcialmente","Evaluado y documentado contra norma"]},
+      {t:"¿Sus decisiones de inversión consideran explícitamente el cierre de brechas normativas?",
+       o:["No","Solo cuando un ente de control lo exige","A veces","Sí, es un criterio central de priorización"]},
+    ]},
+  { id:"D4", nombre:"Gestión del mantenimiento", peso:0.20,
+    rec:"Pase del mantenimiento correctivo a un plan preventivo costeado técnicamente (APU) por actividad y frecuencia. Es la palanca de mayor ahorro a mediano plazo.",
+    qs:[
+      {t:"¿Tiene un plan de mantenimiento para su portafolio?",
+       o:["No existe","Solo mantenimiento correctivo (reactivo)","Plan preventivo parcial","Plan preventivo costeado y ejecutado"]},
+      {t:"¿El presupuesto de mantenimiento se asigna con base en un costeo técnico?",
+       o:["No, es un global histórico","Estimación gruesa","Costeo por actividad para algunos sistemas","Costeo técnico (APU) por actividad y frecuencia"]},
+    ]},
+  { id:"D5", nombre:"Calidad de la inversión", peso:0.15,
+    rec:"Adopte un modelo de priorización de la inversión por impacto y costo (beneficiarios por peso invertido), en lugar de decidir por urgencia o presión externa.",
+    qs:[
+      {t:"¿Cómo decide en qué activos invertir primero?",
+       o:["Por urgencia / presión externa","Por criterio del momento","Con algunos criterios técnicos","Con un modelo de priorización por impacto y costo"]},
+      {t:"¿Su inversión reciente fue mayormente...?",
+       o:["Correctiva (apagar incendios)","Mixta, sin planeación","Mayormente preventiva / planeada","Estratégica, alineada a un plan de portafolio"]},
+    ]},
+  { id:"D6", nombre:"Gestión del riesgo / criticidad", peso:0.10,
+    rec:"Identifique y mapee sus activos más críticos (por población atendida y exposición a amenazas). Haga del riesgo un criterio explícito del plan de inversión.",
+    qs:[
+      {t:"¿Identifica cuáles de sus activos son los más críticos (población atendida, riesgo, exposición)?",
+       o:["No","Informalmente","Sí, con criterio cualitativo","Sí, con criterio medible y priorizado"]},
+      {t:"¿Tiene identificados los activos expuestos a amenazas (sismo, inundación, remoción en masa)?",
+       o:["No","Solo los evidentes","Parcialmente mapeados","Mapeados y considerados en el plan"]},
+    ]},
+];
+
+const LEVELS = [
+  { min:82, nombre:"Estratégico", color:"#2E7D32",
+    desc:"Opera con visión de portafolio e inversión optimizada por criticidad. El reto es sostener la mejora continua y la actualización periódica de la información." },
+  { min:63, nombre:"Gestionado", color:"#2E75B6",
+    desc:"Gestiona su portafolio con datos centralizados y planes preventivos. Está listo para optimizar la priorización de la inversión con un enfoque de portafolio." },
+  { min:44, nombre:"Básico", color:"#E08600",
+    desc:"Hay avances parciales (algo de inventario y mantenimiento), pero sin visión de conjunto. Consolidar datos y método le permitirá decidir con criterio." },
+  { min:0, nombre:"Reactivo", color:"#C0392B",
+    desc:"Su portafolio se gestiona apagando incendios: falta inventario confiable y la inversión es mayormente correctiva. El primer paso es construir la línea base de información." },
+];
+function levelFor(score){ return LEVELS.find(l => score >= l.min); }
+
+/* ---------- render del formulario ---------- */
+function renderQuestions(){
+  let n = 0, html = "";
+  DIMENSIONS.forEach(d => {
+    d.qs.forEach((q, qi) => {
+      n++;
+      html += '<div class="q"><div class="dim-tag">'+d.id+' · '+d.nombre+'</div>'
+            + '<div class="qt">'+n+'. '+q.t+'</div>';
+      q.o.forEach((opt, oi) => {
+        const name = "q_"+d.id+"_"+qi;
+        html += '<label class="opt"><input type="radio" name="'+name+'" value="'+(oi+1)+'"><span>'+opt+'</span></label>';
+      });
+      html += '</div>';
+    });
+  });
+  document.getElementById("questions").innerHTML = html;
+}
+function start(){
+  document.getElementById("introCard").classList.add("hidden");
+  document.getElementById("form").classList.remove("hidden");
+  renderQuestions();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ---------- cálculo ---------- */
+function computeScores(){
+  const dims = DIMENSIONS.map(d => {
+    let sum = 0;
+    d.qs.forEach((q, qi) => {
+      const sel = document.querySelector('input[name="q_'+d.id+'_'+qi+'"]:checked');
+      sum += (parseInt(sel.value,10)) * 25; // 1..4 -> 25..100
+    });
+    return { id:d.id, nombre:d.nombre, peso:d.peso, rec:d.rec, score: Math.round(sum / d.qs.length) };
+  });
+  const impi = Math.round(dims.reduce((a,d)=> a + d.score * d.peso, 0));
+  return { impi, dims };
+}
+function allAnswered(){
+  for(const d of DIMENSIONS){
+    for(let qi=0; qi<d.qs.length; qi++){
+      if(!document.querySelector('input[name="q_'+d.id+'_'+qi+'"]:checked')) return false;
+    }
+  }
+  return true;
+}
+
+/* ---------- envío ---------- */
+function submitForm(){
+  const err = document.getElementById("formErr"); err.textContent="";
+  const entidad = val("entidad"), responsable = val("responsable"), email = val("email");
+  if(!entidad || !responsable || !email){ err.textContent="Complete entidad, nombre y correo."; return; }
+  if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent="Ingrese un correo válido."; return; }
+  if(!allAnswered()){ err.textContent="Responda las 12 preguntas antes de continuar."; return; }
+
+  const data = computeScores();
+  const meta = { entidad, responsable, email, pais:val("pais"), nsedes:val("nsedes"), tipo:val("tipo") };
+  sendLead(meta, data);
+  renderResults(meta, data);
+}
+function val(id){ return (document.getElementById(id).value||"").trim(); }
+
+function sendLead(meta, data){
+  if(!LEAD_ENDPOINT) return;
+  try{
+    fetch(LEAD_ENDPOINT, {method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body: JSON.stringify({ ...meta, impi:data.impi, nivel:levelFor(data.impi).nombre,
+        detalle:data.dims.map(d=>d.id+"="+d.score).join(", ") })}).catch(()=>{});
+  }catch(e){}
+}
+
+/* ---------- resultados en pantalla ---------- */
+function renderResults(meta, data){
+  const lv = levelFor(data.impi);
+  const weak = [...data.dims].sort((a,b)=>a.score-b.score).slice(0,3).filter(d=>d.score<75);
+  let bars = "";
+  data.dims.forEach(d=>{
+    const c = levelFor(d.score).color;
+    bars += '<div class="bar-row"><div class="bar-label">'+d.id+' '+d.nombre+'</div>'
+          + '<div class="bar-track"><div class="bar-fill" style="width:'+d.score+'%;background:'+c+'">'+d.score+'</div></div></div>';
+  });
+  let recos = weak.length
+    ? weak.map(d=>'<div class="reco"><strong>'+d.nombre+' ('+d.score+'/100):</strong> '+d.rec+'</div>').join("")
+    : '<div class="reco">Su portafolio muestra buena madurez en todas las dimensiones. El foco ahora es sostener y automatizar la actualización de la información.</div>';
+
+  document.getElementById("form").classList.add("hidden");
+  const r = document.getElementById("results");
+  r.classList.remove("hidden");
+  r.innerHTML =
+    '<div class="card"><div class="score-hero">'
+      +'<div class="muted">'+meta.entidad+'</div>'
+      +'<div class="score-num" style="color:'+lv.color+'">'+data.impi+'<span style="font-size:24px;color:#999">/100</span></div>'
+      +'<div class="level-badge" style="background:'+lv.color+'">Nivel: '+lv.nombre+'</div>'
+      +'<p style="max-width:620px;margin:6px auto 0">'+lv.desc+'</p>'
+    +'</div></div>'
+    +'<div class="card"><h2>Resultado por dimensión</h2>'+bars+'</div>'
+    +'<div class="card"><h2>Sus prioridades inmediatas</h2>'+recos+'</div>'
+    +'<div class="card"><div class="cta"><h3>El siguiente paso</h3>'
+      +'<p>Este autodiagnóstico es un primer acercamiento <strong>macro</strong>. El paso siguiente es un '
+      +'<strong>Diagnóstico Integral de su portafolio (metodología MeDIPI)</strong>: levantamiento por activo, '
+      +'medición de las tres brechas —estructural, funcional y de capacidad— y un <strong>Plan de Infraestructura '
+      +'priorizado y costeado</strong>.</p>'
+      +'<p style="margin-bottom:0">Escríbanos: <strong>'+CONTACTO.email+'</strong> ('+CONTACTO.nombre+')</p>'
+    +'</div></div>'
+    +'<div class="card center">'
+      +'<button class="btn" onclick=\'downloadPDF()\'>⬇ Descargar informe en PDF</button> '
+      +'<button class="btn btn-ghost" onclick="location.reload()">Hacer otro diagnóstico</button>'
+    +'</div>';
+  window.scrollTo({top:0,behavior:"smooth"});
+  window._impiState = { meta, data };
+}
+
+/* ---------- PDF ---------- */
+function downloadPDF(){
+  const { meta, data } = window._impiState;
+  const lv = levelFor(data.impi);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"a4" });
+  const W = doc.internal.pageSize.getWidth();
+  const M = 48; let y = 0;
+  const hex = h => { const n=parseInt(h.slice(1),16); return [n>>16, (n>>8)&255, n&255]; };
+
+  // encabezado
+  doc.setFillColor(31,56,100); doc.rect(0,0,W,82,"F");
+  doc.setTextColor(255); doc.setFont("helvetica","bold"); doc.setFontSize(20);
+  doc.text("Autodiagnóstico IMPI", M, 38);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10.5);
+  doc.text("Índice de Madurez del Portafolio de Infraestructura", M, 58);
+  doc.setFontSize(9); doc.text("Metodología MeDIPI — Infraestructura como Portafolio", M, 72);
+  y = 104;
+
+  // datos
+  doc.setTextColor(60); doc.setFontSize(10.5);
+  doc.setFont("helvetica","bold"); doc.text(meta.entidad, M, y);
+  doc.setFont("helvetica","normal");
+  doc.text(meta.responsable + "   ·   " + (meta.pais||"") + "   ·   " + (meta.nsedes? meta.nsedes+" activos":"") , M, y+15);
+  doc.text("Tipo: " + meta.tipo, M, y+30);
+  y += 54;
+
+  // puntaje
+  const [r,g,b] = hex(lv.color);
+  doc.setDrawColor(225); doc.setFillColor(248,249,250);
+  doc.roundedRect(M, y, W-2*M, 92, 8, 8, "FD");
+  doc.setTextColor(r,g,b); doc.setFont("helvetica","bold"); doc.setFontSize(46);
+  doc.text(String(data.impi), M+30, y+60);
+  doc.setFontSize(13); doc.setTextColor(150); doc.text("/100", M+30+doc.getTextWidth(String(data.impi))+6, y+60);
+  doc.setFillColor(r,g,b); doc.roundedRect(M+150, y+24, 170, 26, 13, 13, "F");
+  doc.setTextColor(255); doc.setFontSize(12); doc.text("Nivel: "+lv.nombre, M+160, y+41);
+  doc.setTextColor(70); doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+  doc.text(doc.splitTextToSize(lv.desc, W-2*M-160), M+150, y+64);
+  y += 116;
+
+  // barras por dimensión
+  doc.setTextColor(31,56,100); doc.setFont("helvetica","bold"); doc.setFontSize(13);
+  doc.text("Resultado por dimensión", M, y); y += 18;
+  doc.setFontSize(9);
+  data.dims.forEach(d=>{
+    const c = hex(levelFor(d.score).color);
+    doc.setTextColor(50); doc.setFont("helvetica","bold");
+    doc.text(d.id+" "+d.nombre, M, y+10);
+    const bx = M+200, bw = W-M-bx-34;
+    doc.setFillColor(232,235,238); doc.roundedRect(bx, y, bw, 13, 3,3,"F");
+    doc.setFillColor(c[0],c[1],c[2]); doc.roundedRect(bx, y, Math.max(bw*d.score/100,8), 13, 3,3,"F");
+    doc.setTextColor(90); doc.setFont("helvetica","bold"); doc.text(String(d.score), bx+bw+8, y+10);
+    y += 22;
+  });
+  y += 8;
+
+  // prioridades
+  const weak = [...data.dims].sort((a,b)=>a.score-b.score).slice(0,3).filter(d=>d.score<75);
+  doc.setTextColor(31,56,100); doc.setFont("helvetica","bold"); doc.setFontSize(13);
+  doc.text("Sus prioridades inmediatas", M, y); y += 16;
+  doc.setFontSize(9.5);
+  const recos = weak.length ? weak : [];
+  if(recos.length===0){
+    doc.setTextColor(70); doc.setFont("helvetica","normal");
+    doc.text(doc.splitTextToSize("Buena madurez en todas las dimensiones. El foco ahora es sostener y automatizar la actualización de la información.", W-2*M), M, y+10);
+    y += 30;
+  } else {
+    recos.forEach(d=>{
+      doc.setFillColor(214,228,240); doc.setDrawColor(46,117,182);
+      const lines = doc.splitTextToSize(d.rec, W-2*M-24);
+      const h = 16 + lines.length*12;
+      doc.rect(M, y, 4, h, "F");
+      doc.setTextColor(31,56,100); doc.setFont("helvetica","bold");
+      doc.text(d.nombre+" ("+d.score+"/100):", M+12, y+12);
+      doc.setTextColor(70); doc.setFont("helvetica","normal");
+      doc.text(lines, M+12, y+26);
+      y += h + 8;
+    });
+  }
+
+  // CTA
+  if(y > 690){ doc.addPage(); y = 60; }
+  doc.setFillColor(31,56,100); doc.roundedRect(M, y, W-2*M, 86, 8,8,"F");
+  doc.setTextColor(255); doc.setFont("helvetica","bold"); doc.setFontSize(12);
+  doc.text("El siguiente paso", M+18, y+22);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+  doc.text(doc.splitTextToSize("Este autodiagnóstico es un acercamiento macro. El siguiente paso es un Diagnóstico Integral de su portafolio (MeDIPI): levantamiento por activo, medición de las tres brechas (estructural, funcional y de capacidad) y un Plan de Infraestructura priorizado y costeado.", W-2*M-36), M+18, y+40);
+  doc.setFont("helvetica","bold");
+  doc.text("Contacto: "+CONTACTO.email+"  ·  "+CONTACTO.nombre, M+18, y+76);
+
+  // pie
+  doc.setTextColor(150); doc.setFont("helvetica","normal"); doc.setFontSize(7.5);
+  doc.text("Herramienta de aproximación macro — no reemplaza un diagnóstico técnico de campo. Metodología MeDIPI © Carlos López.",
+    M, doc.internal.pageSize.getHeight()-24);
+
+  const safe = (meta.entidad||"portafolio").replace(/[^a-z0-9]/gi,"_").slice(0,30);
+  doc.save("IMPI_"+safe+".pdf");
+}
+</script>
+</body>
+</html>
