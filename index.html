@@ -86,6 +86,7 @@
         <div><label class="fld">Correo electrónico *</label><input type="email" id="email" required></div>
         <div><label class="fld">País</label><input type="text" id="pais" value="Colombia"></div>
         <div><label class="fld">N.º aproximado de activos / sedes</label><input type="number" id="nsedes" min="1" placeholder="ej. 50"></div>
+        <div><label class="fld">Área construida aproximada (m²)</label><input type="number" id="area" min="0" placeholder="ej. 5000"></div>
         <div><label class="fld">Tipo de infraestructura</label>
           <select id="tipo">
             <option>Educativa</option><option>Salud</option><option>Deportiva / recreativa</option>
@@ -129,6 +130,16 @@ const CONTACTO = {
 // y pegue aquí su URL (queda como "https://formspree.io/f/xxxxxxx"). Si lo deja vacío, la
 // herramienta funciona igual pero no envía el lead a ningún lado (solo genera el PDF).
 const LEAD_ENDPOINT = "https://formspree.io/f/xzdqwqbq";
+
+// INTEGRACIÓN con el aplicativo de Plan de Mantenimiento.
+// Cuando publique el aplicativo, ponga aquí su URL (ej. ".../plan-mantenimiento/").
+// Mientras esté vacío, el botón apunta a una ruta relativa local.
+const PLAN_URL = "https://chlopezr-personalsp.github.io/plan-mantenimiento/";
+// Mapea el tipo de la encuesta al tipo de infraestructura del aplicativo
+const MAPA_INFRA = {
+  "Educativa":"educativa", "Salud":"hospitalaria", "Deportiva / recreativa":"deportiva",
+  "Administrativa / oficinas":"oficinas", "Cultural":"institucional", "Otra":"institucional"
+};
 
 /* ============================================================
    MODELO IMPI — 6 dimensiones ponderadas, 2 preguntas c/u
@@ -252,7 +263,7 @@ function submitForm(){
   if(!allAnswered()){ err.textContent="Responda las 12 preguntas antes de continuar."; return; }
 
   const data = computeScores();
-  const meta = { entidad, responsable, email, pais:val("pais"), nsedes:val("nsedes"), tipo:val("tipo") };
+  const meta = { entidad, responsable, email, pais:val("pais"), nsedes:val("nsedes"), area:val("area"), tipo:val("tipo") };
   sendLead(meta, data);
   renderResults(meta, data);
 }
@@ -298,7 +309,8 @@ function renderResults(meta, data){
       +'<strong>Diagnóstico Integral de su portafolio (metodología MeDIPI)</strong>: levantamiento por activo, '
       +'medición de las tres brechas —estructural, funcional y de capacidad— y un <strong>Plan de Infraestructura '
       +'priorizado y costeado</strong>.</p>'
-      +'<p style="margin-bottom:0">Escríbanos: <strong>'+CONTACTO.email+'</strong> ('+CONTACTO.nombre+')</p>'
+      +'<p>Escríbanos: <strong>'+CONTACTO.email+'</strong> ('+CONTACTO.nombre+')</p>'
+      +'<button class="btn" style="background:#fff;color:#1F3864;margin-top:6px" onclick="irAlPlan()">🔧 Generar un plan de mantenimiento con estos datos →</button>'
     +'</div></div>'
     +'<div class="card center">'
       +'<button class="btn" onclick=\'downloadPDF()\'>⬇ Descargar informe en PDF</button> '
@@ -306,6 +318,20 @@ function renderResults(meta, data){
     +'</div>';
   window.scrollTo({top:0,behavior:"smooth"});
   window._impiState = { meta, data };
+}
+
+/* ---------- integración con el aplicativo de Plan de Mantenimiento ---------- */
+function irAlPlan(){
+  const { meta } = window._impiState;
+  const infra = MAPA_INFRA[meta.tipo] || "institucional";
+  const params = new URLSearchParams();
+  params.set("infra", infra);
+  if(meta.area)   params.set("area_construida", meta.area);
+  if(meta.nsedes) params.set("nsedes", meta.nsedes);
+  // Respaldo por localStorage (si el aplicativo está en el mismo dominio)
+  try{ localStorage.setItem("impi_portafolio", JSON.stringify({infra, area_construida:meta.area||"", nsedes:meta.nsedes||""})); }catch(e){}
+  const base = PLAN_URL || "../plan-mantenimiento/plan_mantenimiento.html";
+  location.href = base + (base.includes("?")?"&":"?") + params.toString();
 }
 
 /* ---------- PDF ---------- */
